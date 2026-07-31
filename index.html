@@ -386,7 +386,12 @@ async function loadSlots(){
     .order('slot_date', { ascending: true })
     .order('slot_time', { ascending: true });
 
-  if (error){ console.error('Could not load slots', error); return; }
+  if (error){
+    console.error('Could not load slots', error);
+    const board = document.getElementById('board');
+    if (board) board.innerHTML = '<div class="empty-state">Error loading availability: ' + escapeHtml(error.message) + '</div>';
+    return;
+  }
 
   const now = new Date();
   openSlots = (data || []).filter(s => new Date(s.slot_date + 'T' + s.slot_time) > now);
@@ -600,7 +605,8 @@ async function renderBookingsTable(){
   const { data: bookingsData, error: bookErr } = await sb.from('bookings').select('*');
 
   if (slotsErr || bookErr){
-    body.innerHTML = '<tr><td colspan="5">Could not load — try signing in again.</td></tr>';
+    const msg = (slotsErr && slotsErr.message) || (bookErr && bookErr.message) || 'Unknown error';
+    body.innerHTML = '<tr><td colspan="5">Error: ' + escapeHtml(msg) + '</td></tr>';
     return;
   }
 
